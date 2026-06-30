@@ -1,0 +1,258 @@
+@prefix jogo:        <http://jogo.csml.org/ontology#> .
+@prefix jogo_pop:    <http://jogo.csml.org/rdf/population/> .
+@prefix jogo_sample: <http://jogo.csml.org/rdf/sample/> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# =============================================================================
+# JoGo population / super-population — 1000 Genomes Project (IGSR) ベースの参照データ
+#   集団 → スーパー集団の対応・サンプル数は JoGo の内訳 (jogo_pop.txt) に準拠。
+#   5 super-population + 24 population (うち 23 は標準1000G, USA は JoGo 独自)。
+#   jogo:sampleSize は JoGo が当該集団から用いるサンプル(個体)数。
+#   rdfs:seeAlso は IGSR data portal の集団ページ (USA を除く)。
+#
+# 注意: JSON 内の AFR_total 等の super-population 列は標準1000G集計 (USA を含まない)。
+#       JoGo の内訳では USA は AFR に属する。集団粒度の頻度から super-population を
+#       集約する場合は USA の扱いが JSON 列と一致しない点に留意。
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Super-populations
+# -----------------------------------------------------------------------------
+jogo_pop:AFR a jogo:SuperPopulation ;
+    dcterms:identifier "AFR" ;
+    rdfs:label "African"@en ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/AFR> .
+
+jogo_pop:AMR a jogo:SuperPopulation ;
+    dcterms:identifier "AMR" ;
+    rdfs:label "Admixed American"@en ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/AMR> .
+
+jogo_pop:EAS a jogo:SuperPopulation ;
+    dcterms:identifier "EAS" ;
+    rdfs:label "East Asian"@en ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/EAS> .
+
+jogo_pop:EUR a jogo:SuperPopulation ;
+    dcterms:identifier "EUR" ;
+    rdfs:label "European"@en ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/EUR> .
+
+jogo_pop:SAS a jogo:SuperPopulation ;
+    dcterms:identifier "SAS" ;
+    rdfs:label "South Asian"@en ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/SAS> .
+
+
+# -----------------------------------------------------------------------------
+# Populations — AFR
+# -----------------------------------------------------------------------------
+jogo_pop:ASW a jogo:Population ;
+    dcterms:identifier "ASW" ;
+    rdfs:label "Americans of African Ancestry in SW USA"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 1 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/ASW> .
+
+# USA: 標準 1000 Genomes の26集団に含まれない JoGo 独自コホート。
+#      JoGo の内訳では AFR に分類 (JSON の AFR_total 列には算入されない)。
+jogo_pop:USA a jogo:Population ;
+    dcterms:identifier "USA" ;
+    rdfs:label "USA"@en ;          # TODO: 正式名称・由来コホートを要確認
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 2 .
+
+jogo_pop:LWK a jogo:Population ;
+    dcterms:identifier "LWK" ;
+    rdfs:label "Luhya in Webuye, Kenya"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 3 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/LWK> .
+
+jogo_pop:YRI a jogo:Population ;
+    dcterms:identifier "YRI" ;
+    rdfs:label "Yoruba in Ibadan, Nigeria"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 3 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/YRI> .
+
+jogo_pop:MSL a jogo:Population ;
+    dcterms:identifier "MSL" ;
+    rdfs:label "Mende in Sierra Leone"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 7 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/MSL> .
+
+jogo_pop:ESN a jogo:Population ;
+    dcterms:identifier "ESN" ;
+    rdfs:label "Esan in Nigeria"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 8 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/ESN> .
+
+jogo_pop:ACB a jogo:Population ;
+    dcterms:identifier "ACB" ;
+    rdfs:label "African Caribbeans in Barbados"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 11 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/ACB> .
+
+jogo_pop:GWD a jogo:Population ;
+    dcterms:identifier "GWD" ;
+    rdfs:label "Gambian in Western Divisions in the Gambia"@en ;
+    jogo:superPopulation jogo_pop:AFR ;
+    jogo:sampleSize 15 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/GWD> .
+
+
+# -----------------------------------------------------------------------------
+# Populations — AMR
+# -----------------------------------------------------------------------------
+jogo_pop:CLM a jogo:Population ;
+    dcterms:identifier "CLM" ;
+    rdfs:label "Colombians from Medellin, Colombia"@en ;
+    jogo:superPopulation jogo_pop:AMR ;
+    jogo:sampleSize 11 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/CLM> .
+
+jogo_pop:PEL a jogo:Population ;
+    dcterms:identifier "PEL" ;
+    rdfs:label "Peruvians from Lima, Peru"@en ;
+    jogo:superPopulation jogo_pop:AMR ;
+    jogo:sampleSize 13 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/PEL> .
+
+jogo_pop:PUR a jogo:Population ;
+    dcterms:identifier "PUR" ;
+    rdfs:label "Puerto Ricans from Puerto Rico"@en ;
+    jogo:superPopulation jogo_pop:AMR ;
+    jogo:sampleSize 20 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/PUR> .
+
+# MXL: ハプロタイプ summary 列には無いが samples には存在する標準1000G集団
+jogo_pop:MXL a jogo:Population ;
+    dcterms:identifier "MXL" ;
+    rdfs:label "Mexican Ancestry from Los Angeles USA"@en ;
+    jogo:superPopulation jogo_pop:AMR ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/MXL> .
+
+
+# -----------------------------------------------------------------------------
+# Populations — EAS
+# -----------------------------------------------------------------------------
+jogo_pop:CDX a jogo:Population ;
+    dcterms:identifier "CDX" ;
+    rdfs:label "Chinese Dai in Xishuangbanna, China"@en ;
+    jogo:superPopulation jogo_pop:EAS ;
+    jogo:sampleSize 2 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/CDX> .
+
+jogo_pop:CHB a jogo:Population ;
+    dcterms:identifier "CHB" ;
+    rdfs:label "Han Chinese in Beijing, China"@en ;
+    jogo:superPopulation jogo_pop:EAS ;
+    jogo:sampleSize 2 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/CHB> .
+
+jogo_pop:CHS a jogo:Population ;
+    dcterms:identifier "CHS" ;
+    rdfs:label "Southern Han Chinese"@en ;
+    jogo:superPopulation jogo_pop:EAS ;
+    jogo:sampleSize 9 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/CHS> .
+
+jogo_pop:KHV a jogo:Population ;
+    dcterms:identifier "KHV" ;
+    rdfs:label "Kinh in Ho Chi Minh City, Vietnam"@en ;
+    jogo:superPopulation jogo_pop:EAS ;
+    jogo:sampleSize 12 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/KHV> .
+
+jogo_pop:JPT a jogo:Population ;
+    dcterms:identifier "JPT" ;
+    rdfs:label "Japanese in Tokyo, Japan"@en ;
+    jogo:superPopulation jogo_pop:EAS ;
+    jogo:sampleSize 105 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/JPT> .
+
+
+# -----------------------------------------------------------------------------
+# Populations — EUR
+# -----------------------------------------------------------------------------
+jogo_pop:FIN a jogo:Population ;
+    dcterms:identifier "FIN" ;
+    rdfs:label "Finnish in Finland"@en ;
+    jogo:superPopulation jogo_pop:EUR ;
+    jogo:sampleSize 2 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/FIN> .
+
+jogo_pop:GBR a jogo:Population ;
+    dcterms:identifier "GBR" ;
+    rdfs:label "British in England and Scotland"@en ;
+    jogo:superPopulation jogo_pop:EUR ;
+    jogo:sampleSize 2 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/GBR> .
+
+jogo_pop:TSI a jogo:Population ;
+    dcterms:identifier "TSI" ;
+    rdfs:label "Toscani in Italia"@en ;
+    jogo:superPopulation jogo_pop:EUR ;
+    jogo:sampleSize 2 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/TSI> .
+
+jogo_pop:IBS a jogo:Population ;
+    dcterms:identifier "IBS" ;
+    rdfs:label "Iberian Populations in Spain"@en ;
+    jogo:superPopulation jogo_pop:EUR ;
+    jogo:sampleSize 3 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/IBS> .
+
+# CEU: ハプロタイプ summary 列には無いが samples には存在する標準1000G集団
+jogo_pop:CEU a jogo:Population ;
+    dcterms:identifier "CEU" ;
+    rdfs:label "Utah residents (CEPH) with Northern and Western European Ancestry"@en ;
+    jogo:superPopulation jogo_pop:EUR ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/CEU> .
+
+
+# -----------------------------------------------------------------------------
+# Populations — SAS
+# -----------------------------------------------------------------------------
+jogo_pop:GIH a jogo:Population ;
+    dcterms:identifier "GIH" ;
+    rdfs:label "Gujarati Indians from Houston, Texas, USA"@en ;
+    jogo:superPopulation jogo_pop:SAS ;
+    jogo:sampleSize 1 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/GIH> .
+
+jogo_pop:BEB a jogo:Population ;
+    dcterms:identifier "BEB" ;
+    rdfs:label "Bengali from Bangladesh"@en ;
+    jogo:superPopulation jogo_pop:SAS ;
+    jogo:sampleSize 5 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/BEB> .
+
+jogo_pop:STU a jogo:Population ;
+    dcterms:identifier "STU" ;
+    rdfs:label "Sri Lankan Tamil from the UK"@en ;
+    jogo:superPopulation jogo_pop:SAS ;
+    jogo:sampleSize 5 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/STU> .
+
+jogo_pop:PJL a jogo:Population ;
+    dcterms:identifier "PJL" ;
+    rdfs:label "Punjabi from Lahore, Pakistan"@en ;
+    jogo:superPopulation jogo_pop:SAS ;
+    jogo:sampleSize 14 ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/PJL> .
+
+# ITU: ハプロタイプ summary 列には無いが samples には存在する標準1000G集団
+jogo_pop:ITU a jogo:Population ;
+    dcterms:identifier "ITU" ;
+    rdfs:label "Indian Telugu from the UK"@en ;
+    jogo:superPopulation jogo_pop:SAS ;
+    rdfs:seeAlso <https://www.internationalgenome.org/data-portal/population/ITU> .

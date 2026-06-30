@@ -116,6 +116,16 @@ jogo:SuperPopulation
     rdfs:label "Super Population"@en , "スーパー集団"@ja ;
     rdfs:comment "A super-population grouping several populations (e.g. EAS)."@en .
 
+jogo:Sample
+    a owl:Class ;
+    rdfs:label "Sample"@en , "サンプル"@ja ;
+    rdfs:comment "An individual genome sample (1000 Genomes / JoGo cohort)."@en .
+
+jogo:Variant
+    a owl:Class ;
+    rdfs:label "Variant"@en , "バリアント"@ja ;
+    rdfs:comment "A gene-context variant record carrying gene/transcript-specific allele frequency and snpEff annotation. Linked via rdfs:seeAlso to a canonical, gene-agnostic genomic variant (a gvo:SNV holding the shared class/ref/alt/location)."@en .
+
 
 # =============================================================================
 # Object Properties
@@ -171,9 +181,25 @@ jogo:actgHaplotype
 jogo:hasVariant
     a owl:ObjectProperty ;
     rdfs:label "has variant"@en ;
-    rdfs:comment "A variant carried by this haplotype."@en ;
+    rdfs:comment "A (gene-context) variant carried by this haplotype."@en ;
     rdfs:domain jogo:Haplotype ;
-    rdfs:range gvo:Variant .
+    rdfs:range jogo:Variant .
+
+# 遺伝子別レコード(jogo:Variant) ↔ 正準ゲノム変異(gvo:Variant) の双方向リンク
+jogo:genomicVariant
+    a owl:ObjectProperty ;
+    rdfs:label "genomic variant"@en ;
+    rdfs:comment "Links a gene-context variant record to its canonical, gene-agnostic genomic variant."@en ;
+    rdfs:domain jogo:Variant ;
+    rdfs:range gvo:Variant ;
+    owl:inverseOf jogo:hasGeneVariant .
+
+jogo:hasGeneVariant
+    a owl:ObjectProperty ;
+    rdfs:label "has gene variant"@en ;
+    rdfs:comment "Links a canonical genomic variant to the gene-context variant records describing it (one per gene/region)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range jogo:Variant .
 
 jogo:frequency
     a owl:ObjectProperty ;
@@ -185,8 +211,16 @@ jogo:frequency
 jogo:population
     a owl:ObjectProperty ;
     rdfs:label "population"@en ;
-    rdfs:domain jogo:PopulationFrequency ;
+    rdfs:comment "Relates a population-frequency observation or a sample to a population."@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:PopulationFrequency jogo:Sample ) ] ;
     rdfs:range jogo:Population .
+
+jogo:group
+    a owl:DatatypeProperty ;
+    rdfs:label "group"@en ;
+    rdfs:comment "Name of a JoGo cohort/group the sample belongs to (e.g. 1KG_ONT_VIENNA, JoGo_JPT_HPRC)."@en ;
+    rdfs:domain jogo:Sample ;
+    rdfs:range xsd:string .
 
 jogo:superPopulation
     a owl:ObjectProperty ;
@@ -267,21 +301,21 @@ jogo:alleleCount
     a owl:DatatypeProperty ;
     rdfs:label "allele count"@en ;
     rdfs:comment "Allele count (AC). On PopulationFrequency: count within the population; on a variant: overall AC."@en ;
-    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:PopulationFrequency gvo:Variant ) ] ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:PopulationFrequency jogo:Variant ) ] ;
     rdfs:range xsd:integer .
 
 jogo:alleleNumber
     a owl:DatatypeProperty ;
     rdfs:label "allele number"@en ;
     rdfs:comment "Allele number (AN)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:integer .
 
 jogo:alleleFrequency
     a owl:DatatypeProperty ;
     rdfs:label "allele frequency"@en ;
     rdfs:comment "Allele frequency (AF)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:decimal .
 
 # --- バリアント注釈 (snpEff) ------------------------------------------------
@@ -289,26 +323,26 @@ jogo:annotation
     a owl:DatatypeProperty ;
     rdfs:label "annotation"@en ;
     rdfs:comment "snpEff functional annotation (e.g. missense_variant)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:string .
 
 jogo:annotationImpact
     a owl:DatatypeProperty ;
     rdfs:label "annotation impact"@en ;
     rdfs:comment "snpEff annotation impact (HIGH/MODERATE/LOW/MODIFIER)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:string .
 
 jogo:hgvsC
     a owl:DatatypeProperty ;
     rdfs:label "HGVS.c"@en ;
     rdfs:comment "HGVS coding-level notation (snpeff_hgvs_c)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:string .
 
 jogo:hgvsP
     a owl:DatatypeProperty ;
     rdfs:label "HGVS.p"@en ;
     rdfs:comment "HGVS protein-level notation (snpeff_hgvs_p)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain jogo:Variant ;
     rdfs:range xsd:string .

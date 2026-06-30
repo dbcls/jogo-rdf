@@ -303,24 +303,17 @@
 
 
 # =============================================================================
-# バリアント (avariants / cvariants / tvariants / gvariants)
-#   ゲノム座標ベースの SNV。記述は TogoVar RDF (GVO/FALDO) に準拠。
+# バリアント (avariants / cvariants / tvariants / gvariants) — 2ノード構成
+#   Variant        : 遺伝子別レコード。頻度/snpEff注釈/hgvs を持ち、gene_key でスコープ
+#                    (jogo_var:<gene_key>:<chr-pos-ref-alt>)。haplotype の hasVariant 先。
+#   GenomicVariant : gene非依存の正準ゲノム変異 (jogo_var:<chr-pos-ref-alt>)。class/ref/alt/
+#                    location を持ち座標ベースで全遺伝子共有。記述は TogoVar RDF (GVO/FALDO) 準拠。
+#   双方向リンク: Variant jogo:genomicVariant→ GenomicVariant / GenomicVariant jogo:hasGeneVariant→ Variant
 # =============================================================================
-- Variant jogo_var:12-111790546-C-A:
-  - a: gvo:SNV
-  - dcterms:identifier:
-    - var_id: "12-111790546-C-A"
-  - gvo:ref:
-    - ref: "C"
-  - gvo:alt:
-    - alt: "A"
-  - faldo:location:
-    - []:
-      - a: faldo:ExactPosition
-      - faldo:position:
-        - pos: 111790546
-      - faldo:reference:
-        - var_ref: hco:12\/GRCh38
+
+# --- 遺伝子別レコード -------------------------------------------------------
+- Variant jogo_var:ALDH2:12-111790546-C-A:
+  - a: jogo:Variant
   - jogo:alleleCount:
     - ac: 1
   - jogo:alleleNumber:
@@ -335,6 +328,27 @@
     - snpeff_hgvs_c: "c.665C>A"
   - jogo:hgvsP:
     - snpeff_hgvs_p: "p.Ala222Asp"
+  - jogo:genomicVariant:
+    - genomic_variant: GenomicVariant
+
+# --- 共通(gene非依存)ゲノム変異 ---------------------------------------------
+- GenomicVariant jogo_var:12-111790546-C-A:
+  - a: gvo:SNV
+  - dcterms:identifier:
+    - var_id: "12-111790546-C-A"
+  - gvo:ref:
+    - ref: "C"
+  - gvo:alt:
+    - alt: "A"
+  - faldo:location:
+    - []:
+      - a: faldo:ExactPosition
+      - faldo:position:
+        - pos: 111790546
+      - faldo:reference:
+        - var_ref: hco:12\/GRCh38
+  - jogo:hasGeneVariant:
+    - has_gene_variant: Variant
 
 
 # =============================================================================
