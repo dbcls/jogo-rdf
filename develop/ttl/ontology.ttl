@@ -1,0 +1,307 @@
+@prefix jogo:    <http://jogo.csml.org/ontology#> .
+@prefix faldo:   <http://biohackathon.org/resource/faldo#> .
+@prefix gvo:     <http://genome-variation.org/resource#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# =============================================================================
+# JoGo Haplotype Ontology — たたき台 (draft)
+# =============================================================================
+
+<http://jogo.csml.org/ontology#>
+    a owl:Ontology ;
+    rdfs:label "JoGo Haplotype Ontology"@en ;
+    dcterms:description "Ontology for the JoGo haplotype database (haplotypes at amino-acid / coding / transcript / genebody levels, their composites, variants, and population frequencies)."@en ;
+    owl:versionInfo "0.1-draft" .
+
+
+# =============================================================================
+# Classes
+# =============================================================================
+
+# --- 遺伝子領域 -------------------------------------------------------------
+jogo:GeneRegion
+    a owl:Class ;
+    rdfs:label "Gene Region"@en , "遺伝子領域"@ja ;
+    rdfs:comment "A MANE-defined gene region for which haplotypes are catalogued (cf. maneinfo)."@en .
+
+# --- ハプロタイプ階層 -------------------------------------------------------
+jogo:Haplotype
+    a owl:Class ;
+    rdfs:label "Haplotype"@en , "ハプロタイプ"@ja ;
+    rdfs:comment "Abstract superclass of all JoGo haplotypes."@en .
+
+jogo:IndividualHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:Haplotype ;
+    rdfs:label "Individual Haplotype"@en , "個別ハプロタイプ"@ja ;
+    rdfs:comment "A haplotype defined and numbered independently within a single sequence level (A / C / T / G)."@en .
+
+jogo:CompositeHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:Haplotype ;
+    rdfs:label "Composite Haplotype"@en , "複合ハプロタイプ"@ja ;
+    rdfs:comment "A haplotype representing an observed combination of individual haplotypes across levels (AC / ACT / ACTG)."@en .
+
+# 個別レベル (A / C / T / G)
+jogo:AHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "A Haplotype"@en , "A ハプロタイプ"@ja ;
+    rdfs:comment "Amino-acid-sequence-level haplotype: a distinct protein (amino acid) sequence of the gene. Source: ahaplotypesummary (ahapid)."@en .
+
+jogo:CHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "C Haplotype"@en , "C ハプロタイプ"@ja ;
+    rdfs:comment "Coding(CDS)-sequence-level haplotype: a distinct coding nucleotide sequence. Source: chaplotypesummary (chapid)."@en .
+
+jogo:THaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "T Haplotype"@en , "T ハプロタイプ"@ja ;
+    rdfs:comment "Transcript-level haplotype: a distinct transcript (mRNA incl. UTR) sequence. Source: thaplotypesummary (thapid)."@en .
+
+jogo:GHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "G Haplotype"@en , "G ハプロタイプ"@ja ;
+    rdfs:comment "Genebody-level haplotype: a distinct gene-body sequence (incl. introns). Source: ghaplotypesummary (ghapid)."@en .
+
+# 複合レベル (AC / ACT / ACTG)
+jogo:ACHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:CompositeHaplotype ;
+    rdfs:label "AC Haplotype"@en , "AC ハプロタイプ"@ja ;
+    rdfs:comment "A composite of an A and a C haplotype. Source: achaplotypesummary (achapid)."@en .
+
+jogo:ACTHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:CompositeHaplotype ;
+    rdfs:label "ACT Haplotype"@en , "ACT ハプロタイプ"@ja ;
+    rdfs:comment "A composite of A, C and T haplotypes. Source: acthaplotypesummary (acthapid)."@en .
+
+jogo:ACTGHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:CompositeHaplotype ;
+    rdfs:label "ACTG Haplotype"@en , "ACTG ハプロタイプ"@ja ;
+    rdfs:comment "A composite of A, C, T and G haplotypes; the full sample-level haplotype. Source: actghaplotypesummary (actghapid)."@en .
+
+# --- 集団頻度 ---------------------------------------------------------------
+jogo:PopulationFrequency
+    a owl:Class ;
+    rdfs:label "Population Frequency"@en , "集団頻度"@ja ;
+    rdfs:comment "Observed count/frequency of a haplotype within a given population."@en .
+
+jogo:Population
+    a owl:Class ;
+    rdfs:label "Population"@en , "集団"@ja ;
+    rdfs:comment "A population (e.g. 1000 Genomes population such as JPT)."@en .
+
+jogo:SuperPopulation
+    a owl:Class ;
+    rdfs:subClassOf jogo:Population ;
+    rdfs:label "Super Population"@en , "スーパー集団"@ja ;
+    rdfs:comment "A super-population grouping several populations (e.g. EAS)."@en .
+
+
+# =============================================================================
+# Object Properties
+# =============================================================================
+
+# --- 遺伝子領域 / 複合 → 個別ハプロタイプ -----------------------------------
+# domain は GeneRegion(一覧) と CompositeHaplotype(構成要素) の和
+jogo:aHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "a haplotype"@en ;
+    rdfs:comment "Relates a gene region (its A-haplotype catalogue) or a composite haplotype (its A component) to an A haplotype."@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:GeneRegion jogo:CompositeHaplotype ) ] ;
+    rdfs:range jogo:AHaplotype .
+
+jogo:cHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "c haplotype"@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:GeneRegion jogo:CompositeHaplotype ) ] ;
+    rdfs:range jogo:CHaplotype .
+
+jogo:tHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "t haplotype"@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:GeneRegion jogo:CompositeHaplotype ) ] ;
+    rdfs:range jogo:THaplotype .
+
+jogo:gHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "g haplotype"@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:GeneRegion jogo:CompositeHaplotype ) ] ;
+    rdfs:range jogo:GHaplotype .
+
+# --- 遺伝子領域 → 複合ハプロタイプ ------------------------------------------
+jogo:acHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "ac haplotype"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range jogo:ACHaplotype .
+
+jogo:actHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "act haplotype"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range jogo:ACTHaplotype .
+
+jogo:actgHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "actg haplotype"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range jogo:ACTGHaplotype .
+
+# --- ハプロタイプ → バリアント / 頻度 ---------------------------------------
+jogo:hasVariant
+    a owl:ObjectProperty ;
+    rdfs:label "has variant"@en ;
+    rdfs:comment "A variant carried by this haplotype."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range gvo:Variant .
+
+jogo:frequency
+    a owl:ObjectProperty ;
+    rdfs:label "frequency"@en ;
+    rdfs:comment "A per-population frequency observation of this haplotype."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range jogo:PopulationFrequency .
+
+jogo:population
+    a owl:ObjectProperty ;
+    rdfs:label "population"@en ;
+    rdfs:domain jogo:PopulationFrequency ;
+    rdfs:range jogo:Population .
+
+jogo:superPopulation
+    a owl:ObjectProperty ;
+    rdfs:label "super population"@en ;
+    rdfs:comment "Relates a population to the 1000 Genomes super-population it belongs to."@en ;
+    rdfs:domain jogo:Population ;
+    rdfs:range jogo:SuperPopulation .
+
+jogo:sampleSize
+    a owl:DatatypeProperty ;
+    rdfs:label "sample size"@en ;
+    rdfs:comment "Number of JoGo samples (individuals) used from this population."@en ;
+    rdfs:domain jogo:Population ;
+    rdfs:range xsd:integer .
+
+
+# =============================================================================
+# Datatype Properties
+# =============================================================================
+
+# --- 遺伝子領域 -------------------------------------------------------------
+jogo:regionName
+    a owl:DatatypeProperty ;
+    rdfs:label "region name"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range xsd:string .
+
+jogo:maneStatus
+    a owl:DatatypeProperty ;
+    rdfs:label "MANE status"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range xsd:string .
+
+jogo:maneVersion
+    a owl:DatatypeProperty ;
+    rdfs:label "MANE version"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range xsd:string .
+
+# --- ハプロタイプ共通 -------------------------------------------------------
+jogo:sequenceLength
+    a owl:DatatypeProperty ;
+    rdfs:label "sequence length"@en ;
+    rdfs:comment "Sequence length of the haplotype (A: amino-acid residues, C: CDS nt, T: transcript nt). Not present for G."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range xsd:integer .
+
+jogo:totalCount
+    a owl:DatatypeProperty ;
+    rdfs:label "total count"@en ;
+    rdfs:comment "Total number of observed haplotype copies (column 'total')."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range xsd:integer .
+
+jogo:isGRCh38Reference
+    a owl:DatatypeProperty ;
+    rdfs:label "is GRCh38 reference"@en ;
+    rdfs:comment "Whether this haplotype matches the GRCh38 (p0) reference (source: 1/0)."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range xsd:boolean .
+
+jogo:isCHM13Reference
+    a owl:DatatypeProperty ;
+    rdfs:label "is CHM13 reference"@en ;
+    rdfs:comment "Whether this haplotype matches the CHM13 (v2) reference (source: 1/0)."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range xsd:boolean .
+
+jogo:isMANEReference
+    a owl:DatatypeProperty ;
+    rdfs:label "is MANE reference"@en ;
+    rdfs:comment "Whether this haplotype matches the MANE reference (source: 1/0)."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range xsd:boolean .
+
+# --- 頻度 / バリアント (対立遺伝子) -----------------------------------------
+jogo:alleleCount
+    a owl:DatatypeProperty ;
+    rdfs:label "allele count"@en ;
+    rdfs:comment "Allele count (AC). On PopulationFrequency: count within the population; on a variant: overall AC."@en ;
+    rdfs:domain [ a owl:Class ; owl:unionOf ( jogo:PopulationFrequency gvo:Variant ) ] ;
+    rdfs:range xsd:integer .
+
+jogo:alleleNumber
+    a owl:DatatypeProperty ;
+    rdfs:label "allele number"@en ;
+    rdfs:comment "Allele number (AN)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:integer .
+
+jogo:alleleFrequency
+    a owl:DatatypeProperty ;
+    rdfs:label "allele frequency"@en ;
+    rdfs:comment "Allele frequency (AF)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:decimal .
+
+# --- バリアント注釈 (snpEff) ------------------------------------------------
+jogo:annotation
+    a owl:DatatypeProperty ;
+    rdfs:label "annotation"@en ;
+    rdfs:comment "snpEff functional annotation (e.g. missense_variant)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:string .
+
+jogo:annotationImpact
+    a owl:DatatypeProperty ;
+    rdfs:label "annotation impact"@en ;
+    rdfs:comment "snpEff annotation impact (HIGH/MODERATE/LOW/MODIFIER)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:string .
+
+jogo:hgvsC
+    a owl:DatatypeProperty ;
+    rdfs:label "HGVS.c"@en ;
+    rdfs:comment "HGVS coding-level notation (snpeff_hgvs_c)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:string .
+
+jogo:hgvsP
+    a owl:DatatypeProperty ;
+    rdfs:label "HGVS.p"@en ;
+    rdfs:comment "HGVS protein-level notation (snpeff_hgvs_p)."@en ;
+    rdfs:domain gvo:Variant ;
+    rdfs:range xsd:string .
