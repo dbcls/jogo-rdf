@@ -52,44 +52,51 @@ jogo:CompositeHaplotype
 jogo:AHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:IndividualHaplotype ;
-    rdfs:label "A Haplotype"@en , "A ハプロタイプ"@ja ;
+    rdfs:label "Amino acid sequence level haplotype"@en , "アミノ酸配列レベルハプロタイプ"@ja ;
+    skos:altLabel "A"@en ;
     rdfs:comment "Amino-acid-sequence-level haplotype: a distinct protein (amino acid) sequence of the gene. Source: ahaplotypesummary (ahapid)."@en .
 
 jogo:CHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:IndividualHaplotype ;
-    rdfs:label "C Haplotype"@en , "C ハプロタイプ"@ja ;
+    rdfs:label "Coding sequence (CDS) level haplotype"@en , "コーディング配列(CDS)レベルハプロタイプ"@ja ;
+    skos:altLabel "C"@en ;
     rdfs:comment "Coding(CDS)-sequence-level haplotype: a distinct coding nucleotide sequence. Source: chaplotypesummary (chapid)."@en .
 
 jogo:THaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:IndividualHaplotype ;
-    rdfs:label "T Haplotype"@en , "T ハプロタイプ"@ja ;
+    rdfs:label "Transcript level haplotype"@en , "転写産物レベルハプロタイプ"@ja ;
+    skos:altLabel "T"@en ;
     rdfs:comment "Transcript-level haplotype: a distinct transcript (mRNA incl. UTR) sequence. Source: thaplotypesummary (thapid)."@en .
 
 jogo:GHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:IndividualHaplotype ;
-    rdfs:label "G Haplotype"@en , "G ハプロタイプ"@ja ;
+    rdfs:label "Genebody level haplotype"@en , "遺伝子本体レベルハプロタイプ"@ja ;
+    skos:altLabel "G"@en ;
     rdfs:comment "Genebody-level haplotype: a distinct gene-body sequence (incl. introns). Source: ghaplotypesummary (ghapid)."@en .
 
-# 複合レベル (AC / ACT / ACTG)
+# 複合レベル (AC / ACT / ACTG) — 構成レベルを " + " で連結し累積を明示
 jogo:ACHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:CompositeHaplotype ;
-    rdfs:label "AC Haplotype"@en , "AC ハプロタイプ"@ja ;
+    rdfs:label "AC level haplotype"@en , "AC レベルハプロタイプ"@ja ;
+    skos:altLabel "AC"@en ;
     rdfs:comment "A composite of an A and a C haplotype. Source: achaplotypesummary (achapid)."@en .
 
 jogo:ACTHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:CompositeHaplotype ;
-    rdfs:label "ACT Haplotype"@en , "ACT ハプロタイプ"@ja ;
+    rdfs:label "ACT level haplotype"@en , "ACT レベルハプロタイプ"@ja ;
+    skos:altLabel "ACT"@en ;
     rdfs:comment "A composite of A, C and T haplotypes. Source: acthaplotypesummary (acthapid)."@en .
 
 jogo:ACTGHaplotype
     a owl:Class ;
     rdfs:subClassOf jogo:CompositeHaplotype ;
-    rdfs:label "ACTG Haplotype"@en , "ACTG ハプロタイプ"@ja ;
+    rdfs:label "ACTG level haplotype"@en , "ACTG レベルハプロタイプ"@ja ;
+    skos:altLabel "ACTG"@en ;
     rdfs:comment "A composite of A, C, T and G haplotypes; the full sample-level haplotype. Source: actghaplotypesummary (actghapid)."@en .
 
 # --- 集団頻度 ---------------------------------------------------------------
