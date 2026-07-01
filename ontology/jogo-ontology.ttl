@@ -77,6 +77,20 @@ jogo:GHaplotype
     skos:altLabel "G"@en ;
     rdfs:comment "Genebody-level haplotype: a distinct gene-body sequence (incl. introns). Source: ghaplotypesummary (ghapid)."@en .
 
+jogo:UHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "Upstream level haplotype"@en , "上流レベルハプロタイプ"@ja ;
+    skos:altLabel "U"@en ;
+    rdfs:comment "Upstream flanking-region haplotype. Source: regions/<rn>/flanks upstream (uid), aggregated per uid."@en .
+
+jogo:DHaplotype
+    a owl:Class ;
+    rdfs:subClassOf jogo:IndividualHaplotype ;
+    rdfs:label "Downstream level haplotype"@en , "下流レベルハプロタイプ"@ja ;
+    skos:altLabel "D"@en ;
+    rdfs:comment "Downstream flanking-region haplotype. Source: regions/<rn>/flanks downstream (did), aggregated per did."@en .
+
 # 複合レベル (AC / ACT / ACTG) — 構成レベルを " + " で連結し累積を明示
 jogo:ACHaplotype
     a owl:Class ;
@@ -120,6 +134,11 @@ jogo:Sample
     a owl:Class ;
     rdfs:label "Sample"@en , "サンプル"@ja ;
     rdfs:comment "An individual genome sample (1000 Genomes / JoGo cohort)."@en .
+
+jogo:SampleHaplotype
+    a owl:Class ;
+    rdfs:label "Sample Haplotype"@en , "サンプルハプロタイプ"@ja ;
+    rdfs:comment "One phased haplotype (hp1/hp2) of a sample within a gene region. Identifier is gene-region scoped, e.g. ALDH2:HG02074.hp1."@en .
 
 jogo:Variant
     a owl:Class ;
@@ -176,6 +195,33 @@ jogo:actgHaplotype
     rdfs:label "actg haplotype"@en ;
     rdfs:domain jogo:GeneRegion ;
     rdfs:range jogo:ACTGHaplotype .
+
+jogo:uHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "u haplotype"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range jogo:UHaplotype .
+
+jogo:dHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "d haplotype"@en ;
+    rdfs:domain jogo:GeneRegion ;
+    rdfs:range jogo:DHaplotype .
+
+# --- ハプロタイプ ↔ サンプル -----------------------------------------------
+jogo:hasSampleHaplotype
+    a owl:ObjectProperty ;
+    rdfs:label "has sample haplotype"@en ;
+    rdfs:comment "A phased sample haplotype (hp1/hp2) that carries this haplotype in the gene region."@en ;
+    rdfs:domain jogo:Haplotype ;
+    rdfs:range jogo:SampleHaplotype .
+
+jogo:sample
+    a owl:ObjectProperty ;
+    rdfs:label "sample"@en ;
+    rdfs:comment "The sample (individual) that this sample haplotype belongs to."@en ;
+    rdfs:domain jogo:SampleHaplotype ;
+    rdfs:range jogo:Sample .
 
 # --- ハプロタイプ → バリアント / 頻度 ---------------------------------------
 jogo:hasVariant
