@@ -9,7 +9,10 @@
 #   ACHaplotype    A+C 複合                         ← achaplotypesummary   (achapid   a0001c0001)
 #   ACTHaplotype   A+C+T 複合                       ← acthaplotypesummary  (acthapid  a0001c0001t0001)
 #   ACTGHaplotype  A+C+T+G 複合(サンプル単位の完全) ← actghaplotypesummary (actghapid a0001c0001t0001g0004)
+#   UHaplotype     上流レベル                       ← regions/<rn>/flanks upstream   (uid u0001)
+#   DHaplotype     下流レベル                       ← regions/<rn>/flanks downstream (did d0001)
 #   個別 A/C/T/G は各レベル独立採番。複合は ahapid/chapid/thapid/ghapid で個別を参照。
+#   U/D は flanks を uid/did で集計 (total + 集団別 frequency を a/c/t/g と同形で保持)。
 #
 # ID 規則:
 #   - ハプロタイプ階層部分はコロン無しが正式 (例 a1c1t1g4 ／ データの a0001c0001…)
@@ -18,10 +21,14 @@
 #   - ゼロのみ (a0000) は除去すると空になるため a0 とする
 #   - URI ローカル部にも除去済み正準 ID を使用 (jogo_hap:ALDH2:a1)
 #
-# TODO:
-#   - upstream/downstream ハプロタイプは現データにセクションが無いため削除。
-#     別ファイルでデータが用意できたら再検討。
-#   - haplotypeids (例 HG02074.hp1) によるサンプル・ハプロタイプ所属は未着手。
+# サンプルハプロタイプ (phasing):
+#   - a〜actg は regions/<rn>/samples、u/d は flanks から、各ハプロタイプが
+#     jogo:hasSampleHaplotype で保持。SampleHaplotype は gene_key スコープ
+#     (jogo_sample:ALDH2:HG02074.hp1)、jogo:sample で Sample へ。
+#   - REF(参照ゲノム homoSapiens_grch38/chm13v2) は sample 扱いから除外。
+#
+# 保留:
+#   - flank variants (upstream_gene_variant/downstream_gene_variant) は入力データ再検討中のため未格納。
 #
 # 必要な prefix (prefix.yaml 側で定義 / 出典 prefix_page.tsv):
 #   jogo:        <http://jogo.csml.org/ontology#>
@@ -78,6 +85,11 @@
     - act_hap: ACTHap
   - jogo:actgHaplotype+:
     - actg_hap: ACTGHap
+  # --- 上流/下流レベル (flanks 由来) ---
+  - jogo:uHaplotype+:
+    - u_hap: UHap
+  - jogo:dHaplotype+:
+    - d_hap: DHap
   # --- 外部 DB ---
   - rdfs:seeAlso:
     - hgnc: hgnc:404
@@ -135,6 +147,8 @@
         - a_freq_pop: Pop
       - jogo:alleleCount:
         - a_freq_count: 87
+  - jogo:hasSampleHaplotype*:      # region/samples 由来 (この a を持つ sample-haplotype)
+    - a_sample_hap: SampleHap
 
 # --- C: コーディング(CDS)レベル (chaplotypesummary) --------------------------
 - CHap jogo_hap:ALDH2:c1:
@@ -164,6 +178,8 @@
         - c_freq_pop: Pop
       - jogo:alleleCount:
         - c_freq_count: 87
+  - jogo:hasSampleHaplotype*:
+    - c_sample_hap: SampleHap
 
 # --- T: 転写産物レベル (thaplotypesummary) -----------------------------------
 - THap jogo_hap:ALDH2:t1:
@@ -193,6 +209,8 @@
         - t_freq_pop: Pop
       - jogo:alleleCount:
         - t_freq_count: 48
+  - jogo:hasSampleHaplotype*:
+    - t_sample_hap: SampleHap
 
 # --- G: 遺伝子本体レベル (ghaplotypesummary) ---------------------------------
 - GHap jogo_hap:ALDH2:g1:
@@ -220,6 +238,8 @@
         - g_freq_pop: Pop
       - jogo:alleleCount:
         - g_freq_count: 19
+  - jogo:hasSampleHaplotype*:
+    - g_sample_hap: SampleHap
 
 
 # =============================================================================
@@ -248,6 +268,8 @@
         - ac_freq_pop: Pop
       - jogo:alleleCount:
         - ac_freq_count: 87
+  - jogo:hasSampleHaplotype*:
+    - ac_sample_hap: SampleHap
 
 # --- ACT (acthaplotypesummary) ----------------------------------------------
 - ACTHap jogo_hap:ALDH2:a1c1t1:
@@ -273,6 +295,8 @@
         - act_freq_pop: Pop
       - jogo:alleleCount:
         - act_freq_count: 29
+  - jogo:hasSampleHaplotype*:
+    - act_sample_hap: SampleHap
 
 # --- ACTG (actghaplotypesummary) — サンプル単位の完全ハプロタイプ -----------
 - ACTGHap jogo_hap:ALDH2:a1c1t1g4:
@@ -300,6 +324,67 @@
         - actg_freq_pop: Pop
       - jogo:alleleCount:
         - actg_freq_count: 6
+  - jogo:hasSampleHaplotype*:
+    - actg_sample_hap: SampleHap
+
+
+# =============================================================================
+# 上流/下流レベルのハプロタイプ (U / D) — flanks を uid/did で集計 (REF除外)
+# =============================================================================
+- UHap jogo_hap:ALDH2:u1:
+  - a: jogo:UHaplotype
+  - dcterms:identifier:
+    - uhapid: "ALDH2:u1"
+  - skos:altLabel:
+    - uhapid_padded: "ALDH2:u0001"
+  - jogo:totalCount:
+    - u_total: 36
+  - jogo:frequency*:
+    - []:
+      - a: jogo:PopulationFrequency
+      - jogo:population:
+        - u_freq_pop: Pop
+      - jogo:alleleCount:
+        - u_freq_count: 26
+  - jogo:hasSampleHaplotype*:
+    - u_sample_hap: SampleHap
+
+- DHap jogo_hap:ALDH2:d1:
+  - a: jogo:DHaplotype
+  - dcterms:identifier:
+    - dhapid: "ALDH2:d1"
+  - skos:altLabel:
+    - dhapid_padded: "ALDH2:d0001"
+  - jogo:totalCount:
+    - d_total: 40
+  - jogo:frequency*:
+    - []:
+      - a: jogo:PopulationFrequency
+      - jogo:population:
+        - d_freq_pop: Pop
+      - jogo:alleleCount:
+        - d_freq_count: 30
+  - jogo:hasSampleHaplotype*:
+    - d_sample_hap: SampleHap
+
+
+# =============================================================================
+# サンプルハプロタイプ (region 毎の phasing, hp1/hp2)
+#   出典: regions/<rn>/samples (a〜actg) と flanks (u/d)。REF(参照ゲノム)は除外。
+#   URI は gene region 毎の phasing なので gene_key スコープ (ALDH2:HG02074.hp1)。
+# =============================================================================
+- SampleHap jogo_sample:ALDH2:HG02074.hp1:
+  - a: jogo:SampleHaplotype
+  - dcterms:identifier:
+    - sample_hap_id: "ALDH2:HG02074.hp1"
+  - jogo:sample:
+    - sample: Sample
+
+# Sample 本体は samples.ttl / templates/population.ttl 側で定義 (ここは参照シェイプ)
+- Sample jogo_sample:HG02074:
+  - a: jogo:Sample
+  - dcterms:identifier:
+    - sample_id: "HG02074"
 
 
 # =============================================================================
