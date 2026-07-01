@@ -1,6 +1,6 @@
 @prefix jogo:    <http://jogo.csml.org/ontology#> .
 @prefix faldo:   <http://biohackathon.org/resource/faldo#> .
-@prefix gvo:     <http://genome-variation.org/resource#> .
+@prefix gvo:     <http://genome-variation.org/resource/gvo#> .
 @prefix foaf:    <http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
@@ -231,20 +231,20 @@ jogo:hasVariant
     rdfs:domain jogo:Haplotype ;
     rdfs:range jogo:Variant .
 
-# 遺伝子別レコード(jogo:Variant) ↔ 正準ゲノム変異(gvo:Variant) の双方向リンク
+# 遺伝子別レコード(jogo:Variant) ↔ 正準ゲノム変異(gvo:Variation) の双方向リンク
 jogo:genomicVariant
     a owl:ObjectProperty ;
     rdfs:label "genomic variant"@en ;
-    rdfs:comment "Links a gene-context variant record to its canonical, gene-agnostic genomic variant."@en ;
+    rdfs:comment "Links a gene-context variant record to its canonical, gene-agnostic genomic variant (a GVO Variation)."@en ;
     rdfs:domain jogo:Variant ;
-    rdfs:range gvo:Variant ;
+    rdfs:range gvo:Variation ;
     owl:inverseOf jogo:hasGeneVariant .
 
 jogo:hasGeneVariant
     a owl:ObjectProperty ;
     rdfs:label "has gene variant"@en ;
     rdfs:comment "Links a canonical genomic variant to the gene-context variant records describing it (one per gene/region)."@en ;
-    rdfs:domain gvo:Variant ;
+    rdfs:domain gvo:Variation ;
     rdfs:range jogo:Variant .
 
 jogo:frequency

@@ -46,6 +46,32 @@ module Jogo
     fetch_json("#{BASE}/genicregion?regionname=#{URI.encode_www_form_component(name)}&format=json")
   end
 
+  # per-region の phasing: sample-haplotype ごとの a/c/t/g/ac/act/actg 割当 (hp1/hp2 付き)
+  def fetch_region_samples(rn)
+    fetch_cursor_list("#{BASE}/api/v1/regions/#{URI.encode_www_form_component(rn)}/samples")
+  end
+
+  # upstream/downstream の per-sample-haplotype 割当 { 'upstream'=>[...], 'downstream'=>[...] }
+  def fetch_flanks(rn)
+    d = fetch_json("#{BASE}/api/v1/regions/#{URI.encode_www_form_component(rn)}/flanks?limit=100000")
+    d.dig('data', 'flanking_haplotypes') || {}
+  end
+
+  def fetch_cursor_list(base_url)
+    all = []
+    cur = 0
+    loop do
+      res = fetch_json("#{base_url}?limit=1000&cursor=#{cur}")
+      rows = res['data'] || []
+      all.concat(rows)
+      nc = res.dig('meta', 'pagination', 'next_cursor')
+      break if rows.empty? || nc.nil? || nc == cur || rows.size < 1000
+
+      cur = nc
+    end
+    all
+  end
+
   # Turtle 文字列リテラルのエスケープ
   def lit(s)
     e = s.to_s.gsub(/[\\"\n\r\t]/) do |c|
@@ -60,13 +86,14 @@ class TtlBuilder
     'jogo'      => 'http://jogo.csml.org/ontology#',
     'jogo_gene' => 'http://jogo.csml.org/rdf/gene/',
     'jogo_hap'  => 'http://jogo.csml.org/rdf/haplotype/',
-    'jogo_var'  => 'http://jogo.csml.org/rdf/variant/',
-    'jogo_pop'  => 'http://jogo.csml.org/rdf/population/',
+    'jogo_var'    => 'http://jogo.csml.org/rdf/variant/',
+    'jogo_pop'    => 'http://jogo.csml.org/rdf/population/',
+    'jogo_sample' => 'http://jogo.csml.org/rdf/sample/',
     'hco'       => 'http://identifiers.org/hco/',
     'hgnc'      => 'http://identifiers.org/hgnc/',
     'ensembl'   => 'http://identifiers.org/ensembl/',
     'faldo'     => 'http://biohackathon.org/resource/faldo#',
-    'gvo'       => 'http://genome-variation.org/resource#',
+    'gvo'       => 'http://genome-variation.org/resource/gvo#',
     'foaf'      => 'http://xmlns.com/foaf/0.1/',
     'dcterms'   => 'http://purl.org/dc/terms/',
     'skos'      => 'http://www.w3.org/2004/02/skos/core#',
@@ -104,6 +131,12 @@ class TtlBuilder
     ['gvariants', 'g', 'ghapids']
   ].freeze
 
+  # region/samples の各行が持つ、この sample-haplotype の各レベル割当カラム
+  SAMPLE_HAP_COLS = %w[ahapid chapid thapid ghapid achapid acthapid actghapid].freeze
+  # flanks: section, レベルコード(u/d), hapid列
+  FLANK_TABLES = [['upstream', 'u', 'uid'], ['downstream', 'd', 'did']].freeze
+  REF_GPOP = 'REF' # 参照ゲノム(homoSapiens_grch38/chm13v2)。sample 扱いから除外
+
   def self.prefix_header
     PREFIXES.map { |p, u| "@prefix #{p}: <#{u}> ." }.join("\n") + "\n\n"
   end
@@ -112,24 +145,39 @@ class TtlBuilder
     "#{subject}\n    #{triples.join(" ;\n    ")} .\n\n"
   end
 
+  # GVO の変異型 (ref/alt 長で分類。全て gvo:Variation のサブクラス)
+  def self.gvo_type(ref, alt)
+    r = ref.to_s.length
+    a = alt.to_s.length
+    return 'gvo:SNV' if r == 1 && a == 1
+    return 'gvo:MNV' if r == a
+    return 'gvo:Ins' if a > r && alt.to_s.start_with?(ref.to_s)
+    return 'gvo:Del' if r > a && ref.to_s.start_with?(alt.to_s)
+
+    'gvo:Indel'
+  end
+
   # 共通(gene非依存)ゲノム変異ノードの三つ組。bulk の共有ファイル/自己完結モードで共用。
+  # JoGo データは TogoVar に登録予定のため、TogoVar の変異 URI へ rdfs:seeAlso で繋ぐ。
   def self.genomic_variant_triples(vid, v)
     cn = v['chr'].to_s.sub(/\Achr/, '')
-    vtype = v['ref'].to_s.length == 1 && v['alt'].to_s.length == 1 ? 'gvo:SNV' : 'gvo:Variant'
-    ["a #{vtype}",
+    togovar = "<http://identifiers.org/hco/#{cn}/GRCh38##{v['pos']}-#{v['ref']}-#{v['alt']}>"
+    ["a #{gvo_type(v['ref'], v['alt'])}",
      "dcterms:identifier #{Jogo.lit(vid)}",
      "gvo:ref #{Jogo.lit(v['ref'])}",
      "gvo:alt #{Jogo.lit(v['alt'])}",
      "faldo:location [ a faldo:ExactPosition ; faldo:position #{v['pos'].to_i} ; " \
-     "faldo:reference hco:#{cn}\\/GRCh38 ]"]
+     "faldo:reference hco:#{cn}\\/GRCh38 ]",
+     "rdfs:seeAlso #{togovar}"]
   end
 
   attr_reader :gene_key, :mane_status, :genomic
 
-  # siblings    : 同一遺伝子の別 region の gene URI (CURIE) 配列。rdfs:seeAlso に。
-  # emit_common : true なら共通ゲノム変異ノードを当ファイルにインライン(自己完結=テスト用)。
-  #               false なら出力せず @genomic に収集 (bulk で共有ファイルへ一度だけ出す)。
-  def initialize(data, siblings: [], emit_common: true)
+  # siblings       : 同一遺伝子の別 region の gene URI (CURIE) 配列。rdfs:seeAlso に。
+  # region_samples : /api/v1/regions/<rn>/samples の行 (sample-haplotype ごとの割当)。
+  # flanks         : /api/v1/regions/<rn>/flanks の flanking_haplotypes {upstream,downstream}。
+  # emit_common    : true なら共通ゲノム変異ノードをインライン(自己完結=テスト用)。
+  def initialize(data, siblings: [], region_samples: [], flanks: nil, emit_common: true)
     @d = data
     @m = data.fetch('maneinfo')
     @symbol = @m['symbol']
@@ -139,6 +187,8 @@ class TtlBuilder
     # gene/haplotype/variant の全 URI をこのキーでスコープし region 間衝突を防ぐ。
     @gene_key = @mane_status == 'MANE Select' ? @symbol : @region
     @siblings = siblings || []
+    @region_samples = region_samples || []
+    @flanks = flanks || {}
     @emit_common = emit_common
     @genomic = {}
     @out = +''
@@ -146,12 +196,15 @@ class TtlBuilder
 
   def to_ttl
     build_variant_index
+    build_sample_index
     @genomic = {}
     @out = +''
     @out << header
     @out << "# Generated by jogo2ttl.rb — gene #{@symbol} (#{@region})\n\n"
     build_gene
     build_haplotypes
+    build_ud_haplotypes
+    build_sample_haplotype_nodes
     build_variants
     @out
   end
@@ -171,6 +224,9 @@ class TtlBuilder
   def hap_uri(padded) = "jogo_hap:#{@gene_key}:#{unpad(padded)}"
 
   def var_uri(vid) = "jogo_var:#{@gene_key}:#{vid}"
+
+  # sample-haplotype URI: gene region 毎の phasing なので gene_key でスコープ
+  def sh_uri(sampleid, hid) = "jogo_sample:#{@gene_key}:#{sampleid}.#{hid}"
 
   # 複合id ("a0005c0005t0066g0097") から指定レベルのトークン ("t0066") を取り出す
   def extract_token(composite, level)
@@ -206,6 +262,38 @@ class TtlBuilder
     end
   end
 
+  # --- sample-haplotype インデックス (REF 除外) ------------------------------
+  #   @hap_sh : hap_uri => [sh_uri]        (各ハプロタイプ → 所属 sample-haplotype)
+  #   @sh_of  : sh_uri  => sampleid        (SampleHaplotype ノード生成用)
+  #   @ud     : 'u'/'d' => { padded_id => [rows] }  (U/D 集計用)
+  def build_sample_index
+    @hap_sh = Hash.new { |h, k| h[k] = [] }
+    @sh_of = {}
+    @ud = { 'u' => Hash.new { |h, k| h[k] = [] }, 'd' => Hash.new { |h, k| h[k] = [] } }
+
+    # region/samples: a/c/t/g/ac/act/actg の割当
+    @region_samples.each do |r|
+      next if r['gpopname'] == REF_GPOP
+
+      sh = sh_uri(r['sampleid'], r['haplotypeid']) # haplotypeid = hp1/hp2
+      @sh_of[sh] ||= r['sampleid']
+      SAMPLE_HAP_COLS.each { |c| @hap_sh[hap_uri(r[c])] << sh if present?(r[c]) }
+    end
+
+    # flanks: upstream/downstream の割当 + U/D 集計
+    FLANK_TABLES.each do |sec, _lvl, idcol|
+      (@flanks[sec] || []).each do |r|
+        next if r['gpopname'] == REF_GPOP
+
+        sh = sh_uri(r['sampleid'], r['hid'])
+        @sh_of[sh] ||= r['sampleid']
+        padded = r[idcol]
+        @ud[idcol[0]][padded] << r # idcol[0] = 'u' or 'd'
+        @hap_sh[hap_uri(padded)] << sh
+      end
+    end
+  end
+
   # --- 遺伝子領域 -----------------------------------------------------------
   def build_gene
     t = []
@@ -223,6 +311,12 @@ class TtlBuilder
       idcol = SUMMARY.find { |x| x[0] == sec }[2]
       uris = rows.map { |r| hap_uri(r[idcol]) }.uniq
       t << "jogo:#{pred} #{uris.join(', ')}"
+    end
+    # upstream / downstream (flanks 由来)
+    %w[u d].each do |lvl|
+      next if @ud[lvl].empty?
+
+      t << "jogo:#{lvl}Haplotype #{@ud[lvl].keys.map { |p| hap_uri(p) }.uniq.join(', ')}"
     end
     t << "rdfs:seeAlso hgnc:#{@m['hgncid']}" if present?(@m['hgncid'])
     ens = @m['ensemblid'].to_s.sub(/\.\d+\z/, '')
@@ -260,6 +354,8 @@ class TtlBuilder
           t << "jogo:frequency [ a jogo:PopulationFrequency ; " \
                "jogo:population jogo_pop:#{pop} ; jogo:alleleCount #{cnt} ]"
         end
+        sh = (@hap_sh[s] || []).uniq
+        t << "jogo:hasSampleHaplotype #{sh.join(', ')}" unless sh.empty?
         emit(s, t)
       end
     end
@@ -272,6 +368,35 @@ class TtlBuilder
      .reject { |p| SUPERPOPS.include?(p) }
      .map { |p| [p, r["#{p}_total"].to_i] }
      .select { |_, c| c.positive? }
+  end
+
+  # --- upstream / downstream ハプロタイプ (flanks を uid/did で集計, REF除外済) ---
+  def build_ud_haplotypes
+    { 'u' => 'UHaplotype', 'd' => 'DHaplotype' }.each do |lvl, cls|
+      @ud[lvl].each do |padded, rows|
+        s = hap_uri(padded)
+        t = ["a jogo:#{cls}",
+             "dcterms:identifier #{str("#{@gene_key}:#{unpad(padded)}")}",
+             "skos:altLabel #{str("#{@gene_key}:#{padded}")}",
+             "jogo:totalCount #{rows.size}"]
+        rows.each_with_object(Hash.new(0)) { |r, h| h[r['popname']] += 1 }.sort.each do |pop, cnt|
+          t << "jogo:frequency [ a jogo:PopulationFrequency ; " \
+               "jogo:population jogo_pop:#{pop} ; jogo:alleleCount #{cnt} ]"
+        end
+        sh = (@hap_sh[s] || []).uniq
+        t << "jogo:hasSampleHaplotype #{sh.join(', ')}" unless sh.empty?
+        emit(s, t)
+      end
+    end
+  end
+
+  # --- SampleHaplotype ノード (gene region 毎の phasing; jogo:sample で Sample へ) ---
+  def build_sample_haplotype_nodes
+    @sh_of.sort.each do |sh, sampleid|
+      emit(sh, ['a jogo:SampleHaplotype',
+                "dcterms:identifier #{str(sh.sub('jogo_sample:', ''))}",
+                "jogo:sample jogo_sample:#{sampleid}"])
+    end
   end
 
   # --- variant (a/c/t/g variants を var_id で重複排除) -----------------------
@@ -318,7 +443,10 @@ if $PROGRAM_NAME == __FILE__
     else abort('specify --genename or --regionname')
     end
 
-  builder = TtlBuilder.new(data) # emit_common: true で自己完結ファイル
+  rn = data['maneinfo']['regionname5000']
+  builder = TtlBuilder.new(data, # emit_common: true で自己完結ファイル
+                           region_samples: Jogo.fetch_region_samples(rn),
+                           flanks: Jogo.fetch_flanks(rn))
   ttl = builder.to_ttl
   if opts[:out] == '-'
     $stdout.write(ttl)

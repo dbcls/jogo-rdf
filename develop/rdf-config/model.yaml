@@ -40,7 +40,7 @@
 #   hgnc:        <http://identifiers.org/hgnc/>
 #   ensembl:     <http://identifiers.org/ensembl/>
 #   faldo:       <http://biohackathon.org/resource/faldo#>
-#   gvo:         <http://genome-variation.org/resource#>
+#   gvo:         <http://genome-variation.org/resource/gvo#>
 #   foaf:        <http://xmlns.com/foaf/0.1/>
 #   dcterms:     <http://purl.org/dc/terms/>
 #   skos:        <http://www.w3.org/2004/02/skos/core#>
@@ -418,7 +418,7 @@
 
 # --- 共通(gene非依存)ゲノム変異 ---------------------------------------------
 - GenomicVariant jogo_var:12-111790546-C-A:
-  - a: gvo:SNV
+  - a: gvo:SNV                     # gvo:Variation のサブクラス。ref/alt長で SNV/MNV/Ins/Del/Indel を判定
   - dcterms:identifier:
     - var_id: "12-111790546-C-A"
   - gvo:ref:
@@ -432,6 +432,9 @@
         - pos: 111790546
       - faldo:reference:
         - var_ref: hco:12\/GRCh38
+  # TogoVar 登録を見据え、TogoVar の変異 URI へ rdfs:seeAlso で接続
+  - rdfs:seeAlso:
+    - togovar_variant: <http://identifiers.org/hco/12/GRCh38#111790546-C-A>
   - jogo:hasGeneVariant:
     - has_gene_variant: Variant
 
